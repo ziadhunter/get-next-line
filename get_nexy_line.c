@@ -44,12 +44,18 @@ t_list *new_node(int fd)
 	char *buffer;
 	ssize_t i;
 
+	lst = malloc(sizeof(t_list));
+	if (!lst)
+		return NULL;
 	buffer = malloc(BUFFER_SIZE + 1);
+	if (!buffer)
+		return NULL;
 	i = read(fd, buffer, BUFFER_SIZE);
 	// endoffile or -1 cus i can't read the file;
 	if (i <= 0)
 	{
 		free(buffer);
+		free(lst);
 		return NULL;
 	}
 	buffer[i] = '\0';
@@ -80,7 +86,8 @@ void make(int fd, t_list **the_line)
 	t_list *node;
 
 	current = *the_line;
-	if (current->word)
+	//gha galhali chat current li lta7
+	if (current && current->word)
 		current = current->next;
 	while (check(current))
 	{
@@ -119,15 +126,15 @@ int size_lst(t_list *lst)
 }
 
 
-void	squeezer(t_list *lst, char *the_bottom_line)
+void squeezer(t_list *lst, char **the_bottom_line)
 {
 	int i;
 	int len;
 
 	len = size_lst(lst);
-	the_bottom_line = malloc(len + 1);
-	if (!the_bottom_line)
-		return;
+	*the_bottom_line = malloc(len + 1);
+	if (!*the_bottom_line)
+		return ;
 	len = 0;
 	while (lst != NULL)
 	{
@@ -136,11 +143,11 @@ void	squeezer(t_list *lst, char *the_bottom_line)
 		{
 			if (lst->word[i] == '\n')
 			{
-				the_bottom_line[len++] = '\n';
-				the_bottom_line[len] = '\0';
+				*the_bottom_line[len++] = '\n';
+				*the_bottom_line[len] = '\0';
 				return;
 			}
-			the_bottom_line[len++] = lst->word[i++];
+			*the_bottom_line[len++] = lst->word[i++];
 		}
 		lst = lst->next;
 	}
@@ -164,44 +171,61 @@ void	clear(t_list **lst)
 	*lst = NULL;
 }
 
-void rest(t_list *lst, char *remains)
+void rest(t_list *lst, char **remains)
 {
 	int len;
 	int i;
 	int j;
 
-	len = size_lst(lst);
-	remains = malloc(len % BUFFER_SIZE + 1);
 	while (lst->next)
 		lst = lst->next;
 	i = 0;
 	while (lst->word[i] && lst->word[i] != '\n')
 		i++;
+	if (!lst->word[i]) {
+        *remains = NULL;
+        return;
+    }
+	len = size_lst(lst);
+	*remains = malloc(len - i);
+	if (!*remains)
+        return;
 	j = 0;
 	if(lst->word[i] == '\n')
 	{
 		i++;
 		while(lst->word[i])
-			remains[j++] = lst->word[i++];
-		remains[j] = '\0';
+			*remains[j++] = lst->word[i++];
+		*remains[j] = '\0';
 	}
 }
 
 char *get_next_line(int fd)
 {
-	static t_list *the_line;
+	static t_list *the_line = NULL;
 	char *the_bottom_line;
 	t_list *current;
 	char *remains;
 
+	if (fd < 0 || BUFFER_SIZE <= 0)
+        return NULL;
+
 	make(fd, &the_line);
 	if (!the_line)
 		return NULL;
-	squeezer(the_line, the_bottom_line);
-	rest(the_line, remains);
+	squeezer(the_line, &the_bottom_line);
+	rest(the_line, &remains);
 	clear(&the_line);
-	the_line->word = remains;
-	the_line->next = NULL;
+	if (remains) {
+    	the_line = malloc(sizeof(t_list));
+    	if (!the_line)
+		{
+			free(remains);
+			return NULL;
+		}
+		the_line->word = remains;
+    	the_line->next = NULL;
+	}
 	return the_bottom_line;
 }
 
@@ -219,7 +243,7 @@ int    main(void)
     }
     while ((buffer = get_next_line(fd)) != 0)
     {
-        printf("%s\n", buffer);
+        printf("%s", buffer);
         free(buffer);
     }
     close(fd);
