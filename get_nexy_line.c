@@ -6,7 +6,7 @@
 /*   By: zfarouk <zfarouk@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/19 17:50:27 by zfarouk           #+#    #+#             */
-/*   Updated: 2024/11/20 00:19:18 by zfarouk          ###   ########.fr       */
+/*   Updated: 2024/11/20 18:01:24 by zfarouk          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,22 +23,22 @@ typedef struct s_list
 
 #define BUFFER_SIZE 10
 
-void append(t_list *lst, t_list *node)
+void append(t_list **lst, t_list *node)
 {
 	t_list *current;
 	
-	if (lst == NULL)
+	if (*lst == NULL)
 	{
-		lst = node;
+		*lst = node;
 		return;
 	}
-	current = lst;
+	current = *lst;
 	while (current->next)
 		current = current->next;
 	current->next = node;
 }
 
-t_list *new_node(fd)
+t_list *new_node(int fd)
 {
 	t_list *lst;
 	char *buffer;
@@ -46,6 +46,12 @@ t_list *new_node(fd)
 
 	buffer = malloc(BUFFER_SIZE + 1);
 	i = read(fd, buffer, BUFFER_SIZE);
+	// endoffile or -1 cus i can't read the file;
+	if (i <= 0)
+	{
+		free(buffer);
+		return NULL;
+	}
 	buffer[i] = '\0';
 	lst->word = buffer;
 	lst->next = NULL;
@@ -68,103 +74,155 @@ int check(t_list *node)
 	 return (1);
 }
 
-t_list *make(int fd, t_list *the_line)
+void make(int fd, t_list **the_line)
 {
 	t_list *current;
 	t_list *node;
 
-	current = the_line;
+	current = *the_line;
 	if (current->word)
 		current = current->next;
 	while (check(current))
 	{
 		node = new_node(fd);
+		if (!node)
+			return;
 		append(the_line, node);
 		current = current->next;
 	}
-	return (current);
 }
 
-int print(t_list *lst)
+
+int size_lst(t_list *lst)
 {
-	t_list *current;
 	int i;
+	int len;
 
 	i = 0;
-	while (current != NULL)
+	len = 0;
+	while (lst)
+	{
+		while (lst->word[i])
+		{
+			if (lst->word[i] == '\n')
+			{
+				len++;
+				return (len);
+			}
+			i++;
+			len++;
+		}
+		i = 0;
+		lst = lst->next;
+	}
+	return (len);
+}
+
+
+void	squeezer(t_list *lst, char *the_bottom_line)
+{
+	int i;
+	int len;
+
+	len = size_lst(lst);
+	the_bottom_line = malloc(len + 1);
+	if (!the_bottom_line)
+		return;
+	len = 0;
+	while (lst != NULL)
 	{
 		i = 0;
-		while (current->word[i])
+		while (lst->word[i])
 		{
-			if (current->word[i] == '\n')
+			if (lst->word[i] == '\n')
 			{
-				write(1, &current->word[i], 1);
-				return (i);
+				the_bottom_line[len++] = '\n';
+				the_bottom_line[len] = '\0';
+				return;
 			}
-			write(1, &current->next[i], 1);
-			i++;
+			the_bottom_line[len++] = lst->word[i++];
 		}
-		current = current->next;
+		lst = lst->next;
 	}
-	return (i);
 }
 
-void clear(t_list *lst)
+void	clear(t_list **lst)
 {
-	t_list *current;
-	
-	current = lst;
-	while(lst)
+	t_list	*current;
+	t_list	*the_next;
+
+	if (!*lst || !lst)
+		return ;
+	current = *lst;
+	while (current)
 	{
-		current = lst->next;
-		free(lst->word);
-		free(lst);
-		lst = current;
+		the_next = current->next;
+		free(current->word);
+		free(current);
+		current = the_next;
 	}
+	*lst = NULL;
 }
 
-char	*ft_substr(char const *s, unsigned int start, size_t len)
+void rest(t_list *lst, char *remains)
 {
-	size_t	i;
-	char	*p;
+	int len;
+	int i;
+	int j;
 
-	if (!s)
-		return (NULL);
-	p = malloc((len + 1) * sizeof(char));
-	if (!p)
-		return (NULL);
+	len = size_lst(lst);
+	remains = malloc(len % BUFFER_SIZE + 1);
+	while (lst->next)
+		lst = lst->next;
 	i = 0;
-	while (i < len)
-	{
-		p[i] = s[start + i];
+	while (lst->word[i] && lst->word[i] != '\n')
 		i++;
+	j = 0;
+	if(lst->word[i] == '\n')
+	{
+		i++;
+		while(lst->word[i])
+			remains[j++] = lst->word[i++];
+		remains[j] = '\0';
 	}
-	p[i] = '\0';
-	return (p);
 }
 
-void get_next_line(int fd)
+char *get_next_line(int fd)
 {
 	static t_list *the_line;
-	char *rest;
+	char *the_bottom_line;
 	t_list *current;
-	int index;
+	char *remains;
 
-	current = make(fd, the_line);
-	index = print(the_line);
-	clear(the_line);
-	if (index <= BUFFER_SIZE)
-	{
-		rest = ft_substr(current->word, index + 1, BUFFER_SIZE - index - 1);
-		the_line->word = rest;
-		the_line->next = NULL;
-	}
-
+	make(fd, &the_line);
+	if (!the_line)
+		return NULL;
+	squeezer(the_line, the_bottom_line);
+	rest(the_line, remains);
+	clear(&the_line);
+	the_line->word = remains;
+	the_line->next = NULL;
+	return the_bottom_line;
 }
-int main()
+
+
+int    main(void)
 {
-	int i = open("text", O_RDWR);
-	get_next_line(i);
+    int        fd;
+    char    *buffer;
+
+    fd = open("text.txt", O_RDONLY);
+    if (fd == -1)
+    {
+        printf("open failed\n");
+        return (0);
+    }
+    while ((buffer = get_next_line(fd)) != 0)
+    {
+        printf("%s\n", buffer);
+        free(buffer);
+    }
+    close(fd);
 }
 
 
