@@ -43,22 +43,26 @@ t_list *new_node(int fd)
 	t_list *lst;
 	char *buffer;
 	ssize_t i;
-
-	lst = malloc(sizeof(t_list));
-	if (!lst)
-		return NULL;
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)
 		return NULL;
 	i = read(fd, buffer, BUFFER_SIZE);
+	printf("%ld   dyal ch7al 9ratliya\n", i);
 	// endoffile or -1 cus i can't read the file;
 	if (i <= 0)
 	{
 		free(buffer);
-		free(lst);
 		return NULL;
 	}
 	buffer[i] = '\0';
+;	lst = malloc(sizeof(t_list));
+	if (!lst)
+	{
+		free(buffer);
+		return NULL;
+	}
+	printf("%lu  ch7aal kayn flbuffer\n", sizeof(buffer));
+	printf("%s  (chno kayn flbuffer)\n", buffer);
 	lst->word = buffer;
 	lst->next = NULL;
 	return (lst);
@@ -133,7 +137,6 @@ char *squeezer(t_list *lst)
 	char *buffer;
 
 	len = size_lst(lst);
-	printf("%d\n", len);
 	buffer = malloc(len + 1);
 	if (!buffer)
 		return (NULL);
@@ -215,23 +218,21 @@ char *get_next_line(int fd)
 	if (fd < 0 || BUFFER_SIZE <= 0)
         return NULL;
 	make(fd, &the_line);
-	printf("salina linked list\n");
 	if (!the_line)
 		return NULL;
 	the_bottom_line = squeezer(the_line);
-	printf("%s\n\n\n\n", the_bottom_line);
 	remains = rest(the_line);
-	// clear(&the_line);
-	// if (remains) {
-    // 	the_line = malloc(sizeof(t_list));
-    // 	if (!the_line)
-	// 	{
-	// 		free(remains);
-	// 		return NULL;
-	// 	}
-	// 	the_line->word = remains;
-    // 	the_line->next = NULL;
-	// }
+	clear(&the_line);
+	if (remains) {
+    	the_line = malloc(sizeof(t_list));
+    	if (!the_line)
+		{
+			free(remains);
+			return NULL;
+		}
+		the_line->word = remains;
+    	the_line->next = NULL;
+	}
 	return the_bottom_line;
 	
 }
@@ -242,26 +243,19 @@ int    main(void)
     int        fd;
     char    *buffer;
 
-    fd = open("text.txt", O_RDONLY);
+    fd = open("test.txt", O_RDONLY);
     if (fd == -1)
     {
         printf("open failed\n");
         return (0);
     }
-	buffer == get_next_line(fd);
-	//printf("%s\n", buffer);
-	buffer == get_next_line(fd);
-	// printf("%s\n", buffer);
-	// buffer == get_next_line(fd);
-	// printf("%s\n", buffer);
-    // while (() != 0)
-    // {
-    //     printf("%s", buffer);
-    //     free(buffer);
-    // }
+    while ((buffer = get_next_line(fd)) != 0)
+    {
+        printf("%s101010\n", buffer);
+        free(buffer);
+    }
     close(fd);
 }
-
 
 
 
