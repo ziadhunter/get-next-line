@@ -68,14 +68,18 @@ int check(t_list *node)
 {
 	 int i;
 
-	 i = 0;
-	 if (node->word == NULL)
+	 if (node == NULL || node->word == NULL)
 		 return (1);
-	 while (node->word[i])
-	 {
-		 if (node->word[i] == '\n')
-			 return 0;
-		 i++;
+	while (node)
+	{
+	 	i = 0;
+		while (node->word[i] && i < BUFFER_SIZE)
+	 	{
+			if (node->word[i] == '\n')
+				return 0;
+			i++;
+		}
+		node = node->next;
 	 }
 	 return (1);
 }
@@ -86,16 +90,12 @@ void make(int fd, t_list **the_line)
 	t_list *node;
 
 	current = *the_line;
-	//gha galhali chat current li lta7
-	if (current && current->word)
-		current = current->next;
-	while (check(current))
+	while (check(*the_line))
 	{
 		node = new_node(fd);
 		if (!node)
 			return;
 		append(the_line, node);
-		current = current->next;
 	}
 }
 
@@ -126,15 +126,17 @@ int size_lst(t_list *lst)
 }
 
 
-void squeezer(t_list *lst, char **the_bottom_line)
+char *squeezer(t_list *lst)
 {
 	int i;
 	int len;
+	char *buffer;
 
 	len = size_lst(lst);
-	*the_bottom_line = malloc(len + 1);
-	if (!*the_bottom_line)
-		return ;
+	printf("%d\n", len);
+	buffer = malloc(len + 1);
+	if (!buffer)
+		return (NULL);
 	len = 0;
 	while (lst != NULL)
 	{
@@ -143,14 +145,15 @@ void squeezer(t_list *lst, char **the_bottom_line)
 		{
 			if (lst->word[i] == '\n')
 			{
-				*the_bottom_line[len++] = '\n';
-				*the_bottom_line[len] = '\0';
-				return;
+				buffer[len++] = '\n';
+				buffer[len] = '\0';
+				return (buffer);
 			}
-			*the_bottom_line[len++] = lst->word[i++];
+			buffer[len++] = lst->word[i++];
 		}
 		lst = lst->next;
 	}
+	return (buffer);
 }
 
 void	clear(t_list **lst)
@@ -171,33 +174,36 @@ void	clear(t_list **lst)
 	*lst = NULL;
 }
 
-void rest(t_list *lst, char **remains)
+char *rest(t_list *lst)
 {
 	int len;
 	int i;
 	int j;
+	char *remains;
 
+	if(!lst)
+		return NULL;
 	while (lst->next)
 		lst = lst->next;
 	i = 0;
 	while (lst->word[i] && lst->word[i] != '\n')
 		i++;
 	if (!lst->word[i]) {
-        *remains = NULL;
-        return;
+        return NULL;
     }
 	len = size_lst(lst);
-	*remains = malloc(len - i);
-	if (!*remains)
-        return;
+	remains = malloc(len - i);
+	if (!remains)
+        return NULL;
 	j = 0;
 	if(lst->word[i] == '\n')
 	{
 		i++;
 		while(lst->word[i])
-			*remains[j++] = lst->word[i++];
-		*remains[j] = '\0';
+			remains[j++] = lst->word[i++];
+		remains[j] = '\0';
 	}
+	return (remains);
 }
 
 char *get_next_line(int fd)
@@ -206,27 +212,28 @@ char *get_next_line(int fd)
 	char *the_bottom_line;
 	t_list *current;
 	char *remains;
-
 	if (fd < 0 || BUFFER_SIZE <= 0)
         return NULL;
-
 	make(fd, &the_line);
+	printf("salina linked list\n");
 	if (!the_line)
 		return NULL;
-	squeezer(the_line, &the_bottom_line);
-	rest(the_line, &remains);
-	clear(&the_line);
-	if (remains) {
-    	the_line = malloc(sizeof(t_list));
-    	if (!the_line)
-		{
-			free(remains);
-			return NULL;
-		}
-		the_line->word = remains;
-    	the_line->next = NULL;
-	}
+	the_bottom_line = squeezer(the_line);
+	printf("%s\n\n\n\n", the_bottom_line);
+	remains = rest(the_line);
+	// clear(&the_line);
+	// if (remains) {
+    // 	the_line = malloc(sizeof(t_list));
+    // 	if (!the_line)
+	// 	{
+	// 		free(remains);
+	// 		return NULL;
+	// 	}
+	// 	the_line->word = remains;
+    // 	the_line->next = NULL;
+	// }
 	return the_bottom_line;
+	
 }
 
 
@@ -241,11 +248,17 @@ int    main(void)
         printf("open failed\n");
         return (0);
     }
-    while ((buffer = get_next_line(fd)) != 0)
-    {
-        printf("%s", buffer);
-        free(buffer);
-    }
+	buffer == get_next_line(fd);
+	//printf("%s\n", buffer);
+	buffer == get_next_line(fd);
+	// printf("%s\n", buffer);
+	// buffer == get_next_line(fd);
+	// printf("%s\n", buffer);
+    // while (() != 0)
+    // {
+    //     printf("%s", buffer);
+    //     free(buffer);
+    // }
     close(fd);
 }
 
