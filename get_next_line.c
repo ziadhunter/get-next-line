@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include <string.h>
 
 void	make(int fd, t_list **the_line)
 {
@@ -19,9 +20,10 @@ void	make(int fd, t_list **the_line)
 	// t_list *current;
 	while (check(*the_line))
 	{
-		node = new_node(fd);
+		node = new_node(fd, the_line);
 		if (!node)
 		{
+			// (*the_line)->word = NULL;
 			// current = *the_line;
 			// while (current)
 			// {
@@ -47,7 +49,7 @@ int	size_lst(t_list *lst)
 	while (lst)
 	{
 		i = 0;
-		while (lst->word[i])
+		while (lst->word && lst->word[i])
 		{
 			if (lst->word[i] == '\n')
 			{
@@ -77,7 +79,7 @@ char	*squeezer(t_list *lst)
 	while (lst != NULL)
 	{
 		i = 0;
-		while (lst->word[i])
+		while (lst->word && lst->word[i])
 		{
 			if (lst->word[i] == '\n')
 			{
@@ -151,13 +153,18 @@ char	*get_next_line(int fd)
 	static t_list	*the_line = NULL;
 	char			*the_bottom_line;
 	char			*remains;
-	char			test[1];
+	
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, test, 0) < 0)
+	if (fd < 0 || BUFFER_SIZE <= 0) {
 		return (NULL);
+	}
+
+
 	make(fd, &the_line);
-	if (!the_line)
+	if (!the_line) {
 		return (NULL);
+	}
+
 	the_bottom_line = squeezer(the_line);
 	remains = rest(the_line);
 	clear(&the_line);
@@ -172,6 +179,7 @@ char	*get_next_line(int fd)
 		the_line->word = remains;
 		the_line->next = NULL;
 	}
+
 	return (the_bottom_line);
 }
 
@@ -180,18 +188,21 @@ char	*get_next_line(int fd)
 //     int        fd;
 //     char    *buffer;
 
-//     fd = open("text.txt", O_RDONLY);
-//     if (fd == -1)
-//     {
-//         printf("open failed\n");
-//         return (0);
-//     }
-//     while ((buffer = get_next_line(fd)) != 0)
-//     {
-//         printf("%s", buffer);
-//         free(buffer);
-//     }
+//     fd = open("test.txt", O_RDONLY);
+// 	while ((buffer = get_next_line(fd)) != 0) {
+// 		printf("%s", buffer);
+// 		free(buffer);
+// 	}
+
+// 	printf("%s", get_next_line(fd));
 //     close(fd);
+
+// 	fd = open("test.txt", O_RDONLY);
+// 	printf("%s", get_next_line(fd));
+// 	printf("%s", get_next_line(fd));
+// 	printf("%s", get_next_line(fd));
+// 	printf("%s", get_next_line(fd));
+    
 // }
 
 // int main()

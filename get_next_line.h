@@ -30,13 +30,13 @@ void				clear(t_list **lst);
 char				*squeezer(t_list *lst);
 int					size_lst(t_list *lst);
 int					check(t_list *node);
-t_list				*new_node(int fd);
+t_list				*new_node(int fd, t_list **the_line);
 void				append(t_list **lst, t_list *node);
 
 void				make(int fd, t_list **the_line);
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 10
+#  define BUFFER_SIZE 10000
 # endif
 
 #endif

@@ -15,7 +15,7 @@ void	append(t_list **lst, t_list *node)
 	current->next = node;
 }
 
-t_list	*new_node(int fd)
+t_list	*new_node(int fd, t_list **the_line)
 {
 	t_list	*lst;
 	char	*buffer;
@@ -23,15 +23,21 @@ t_list	*new_node(int fd)
 
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)
+	{
+		clear(the_line);
 		return (NULL);
+	}
 	i = read(fd, buffer, BUFFER_SIZE);
+	
 	if (i <= 0)
 	{
 		free(buffer);
+		if(i == -1) {
+			clear(the_line);
+		}
 		return (NULL);
 	}
 	buffer[i] = '\0';
-	;
 	lst = malloc(sizeof(t_list));
 	if (!lst)
 	{
