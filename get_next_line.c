@@ -13,32 +13,6 @@
 #include "get_next_line.h"
 #include <string.h>
 
-void	make(int fd, t_list **the_line)
-{
-	t_list	*node;
-
-	// t_list *current;
-	while (check(*the_line))
-	{
-		node = new_node(fd, the_line);
-		if (!node)
-		{
-			// (*the_line)->word = NULL;
-			// current = *the_line;
-			// while (current)
-			// {
-			// 	node = current->next;
-			// 	free(current->word);
-			// 	free(current);
-			// 	current = node;
-			// }
-			// *the_line = NULL;
-			return ;
-		}
-		append(the_line, node);
-	}
-}
-
 int	size_lst(t_list *lst)
 {
 	int	i;
@@ -71,8 +45,7 @@ char	*squeezer(t_list *lst)
 	char	*buffer;
 
 	len = size_lst(lst);
-	// printf("%d", len);
-	buffer = malloc(len + 1 + 1);
+	buffer = malloc(len + 1);
 	if (!buffer)
 		return (NULL);
 	len = 0;
@@ -87,13 +60,11 @@ char	*squeezer(t_list *lst)
 				buffer[len++] = '\0';
 				return (buffer);
 			}
-			// printf(" %d ",len);
 			buffer[len++] = lst->word[i++];
 		}
 		lst = lst->next;
 	}
-	buffer[len++] = '\0';
-	return (buffer);
+	return (buffer[len++] = '\0', buffer);
 }
 
 void	clear(t_list **lst)
@@ -130,22 +101,17 @@ char	*rest(t_list *lst)
 		i++;
 	if (!lst->word[i] || lst->word[i + 1] == '\0')
 		return (NULL);
-	j = i + 1;
-	while (lst->word[j])
+	j = 0;
+	len = i + 1;
+	while (lst->word[++i])
 		j++;
-	len = size_lst(lst);
 	remains = malloc(j + 1);
 	if (!remains)
 		return (NULL);
 	j = 0;
-	if (lst->word[i] == '\n')
-	{
-		i++;
-		while (lst->word[i])
-			remains[j++] = lst->word[i++];
-		remains[j] = '\0';
-	}
-	return (remains);
+	while (lst->word[len])
+		remains[j++] = lst->word[len++];
+	return (remains[j] = '\0', remains);
 }
 
 char	*get_next_line(int fd)
@@ -153,18 +119,12 @@ char	*get_next_line(int fd)
 	static t_list	*the_line = NULL;
 	char			*the_bottom_line;
 	char			*remains;
-	
 
-	if (fd < 0 || BUFFER_SIZE <= 0) {
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	}
-
-
 	make(fd, &the_line);
-	if (!the_line) {
+	if (!the_line)
 		return (NULL);
-	}
-
 	the_bottom_line = squeezer(the_line);
 	remains = rest(the_line);
 	clear(&the_line);
@@ -179,34 +139,5 @@ char	*get_next_line(int fd)
 		the_line->word = remains;
 		the_line->next = NULL;
 	}
-
 	return (the_bottom_line);
 }
-
-// int main(void)
-// {
-//     int        fd;
-//     char    *buffer;
-
-//     fd = open("test.txt", O_RDONLY);
-// 	while ((buffer = get_next_line(fd)) != 0) {
-// 		printf("%s", buffer);
-// 		free(buffer);
-// 	}
-
-// 	printf("%s", get_next_line(fd));
-//     close(fd);
-
-// 	fd = open("test.txt", O_RDONLY);
-// 	printf("%s", get_next_line(fd));
-// 	printf("%s", get_next_line(fd));
-// 	printf("%s", get_next_line(fd));
-// 	printf("%s", get_next_line(fd));
-    
-// }
-
-// int main()
-// {
-// 	x();
-// 	system("leaks a.out");
-// }

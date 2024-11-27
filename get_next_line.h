@@ -36,7 +36,7 @@ void				append(t_list **lst, t_list *node);
 void				make(int fd, t_list **the_line);
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 10000
+#  define BUFFER_SIZE 1
 # endif
 
 #endif
