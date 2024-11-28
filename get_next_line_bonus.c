@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   get_nexy_line.c                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: zfarouk <zfarouk@student.1337.ma>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/19 17:50:27 by zfarouk           #+#    #+#             */
-/*   Updated: 2024/11/20 18:01:24 by zfarouk          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "get_next_line.h"
 
 int	size_lst(t_list *lst)
@@ -115,28 +103,28 @@ char	*rest(t_list *lst)
 
 char	*get_next_line(int fd)
 {
-	static t_list	*the_line = NULL;
+	static t_list	*the_line[1024];
 	char			*the_bottom_line;
 	char			*remains;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	make(fd, &the_line);
-	if (!the_line)
+	make(fd, the_line[fd]);
+	if (!the_line[fd])
 		return (NULL);
-	the_bottom_line = squeezer(the_line);
-	remains = rest(the_line);
-	clear(&the_line);
+	the_bottom_line = squeezer(the_line[fd]);
+	remains = rest(the_line[fd]);
+	clear(the_line[fd]);
 	if (remains)
 	{
-		the_line = malloc(sizeof(t_list));
+		the_line[fd] = malloc(sizeof(t_list));
 		if (!the_line)
 		{
 			free(remains);
 			return (NULL);
 		}
-		the_line->word = remains;
-		the_line->next = NULL;
+		the_line[fd]->word = remains;
+		the_line[fd]->next = NULL;
 	}
 	return (the_bottom_line);
 }
