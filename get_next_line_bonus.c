@@ -1,4 +1,4 @@
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 int	size_lst(t_list *lst)
 {
@@ -103,22 +103,22 @@ char	*rest(t_list *lst)
 
 char	*get_next_line(int fd)
 {
-	static t_list	*the_line[1024];
+	static t_list	*the_line[FD_SETSIZE];
 	char			*the_bottom_line;
 	char			*remains;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
+	if (fd < 0 || BUFFER_SIZE <= 0 || fd > FD_SETSIZE)
 		return (NULL);
-	make(fd, the_line[fd]);
+	make(fd, &the_line[fd]);
 	if (!the_line[fd])
 		return (NULL);
 	the_bottom_line = squeezer(the_line[fd]);
 	remains = rest(the_line[fd]);
-	clear(the_line[fd]);
+	clear(&the_line[fd]);
 	if (remains)
 	{
 		the_line[fd] = malloc(sizeof(t_list));
-		if (!the_line)
+		if (!the_line[fd])
 		{
 			free(remains);
 			return (NULL);
